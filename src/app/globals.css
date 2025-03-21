@@ -1,0 +1,88 @@
+/* Tailwind CSS Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Đảm bảo các màu background có đủ độ tương phản với text cho tất cả themes */
+[data-theme] .text-base-content {
+  color: hsl(var(--bc)) !important;
+}
+
+[data-theme] .stroke-current {
+  stroke: hsl(var(--bc)) !important;
+}
+
+[data-theme] .fill-current {
+  fill: hsl(var(--bc)) !important;
+}
+
+[data-theme] .bg-base-100 {
+  background-color: hsl(var(--b1));
+}
+
+[data-theme] .bg-base-200 {
+  background-color: hsl(var(--b2));
+}
+
+[data-theme] .bg-base-300 {
+  background-color: hsl(var(--b3));
+}
+
+/* Đảm bảo các icon luôn hiển thị đúng trên nền sáng */
+[data-theme="light"] .btn-ghost svg,
+[data-theme="cupcake"] .btn-ghost svg,
+[data-theme="bumblebee"] .btn-ghost svg,
+[data-theme="emerald"] .btn-ghost svg,
+[data-theme="corporate"] .btn-ghost svg {
+  stroke: hsl(var(--bc));
+  fill: hsl(var(--bc));
+}
+
+/* Modal corrections for all themes */
+.modal-box {
+  background-color: hsl(var(--b1)) !important;
+  color: hsl(var(--bc)) !important;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Make tabs visible in all themes */
+.tab {
+  color: hsl(var(--bc)) !important;
+}
+
+.tab-active {
+  background-color: hsl(var(--p)) !important;
+  color: hsl(var(--pc)) !important;
+}
+
+/* Input styles with better contrast */
+.input {
+  color: hsl(var(--bc)) !important;
+  background-color: hsl(var(--b1)) !important;
+  border-color: hsl(var(--b3)) !important;
+}
+
+.input::placeholder {
+  color: hsl(var(--bc) / 0.5) !important;
+}

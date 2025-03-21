@@ -1,0 +1,120 @@
+.logo-container {
+  position: relative;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.logo-gradient {
+  background: linear-gradient(135deg, 
+    #ff0080, #ff4d00, #ffff00, 
+    #00ffff, #0080ff, #7000ff, 
+    #ff00ff, #ff0080);
+  background-size: 400% 400%;
+  animation: vivid-gradient 8s ease infinite;
+  z-index: 1;
+}
+
+.logo-bubble {
+  width: 60%;
+  height: 60%;
+  background-color: white;
+  border-radius: 50%;
+  bottom: 5%;
+  right: 5%;
+  z-index: 2;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bubble-2 {
+  width: 40%;
+  height: 40%;
+  bottom: 40%;
+  right: 30%;
+  background-color: white;
+  z-index: 3;
+}
+
+.logo-text {
+  background: linear-gradient(to right, 
+    #4299e1, /* blue */
+    #9f7aea, /* purple */
+    #ed64a6  /* pink */
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  /* Đảm bảo văn bản gradient hiển thị đúng */
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes vivid-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Add some hover effects */
+.logo-container:hover .logo-gradient {
+  animation: vivid-gradient 3s ease infinite;
+}
+
+/* Add some hover effects */
+@media (hover: hover) {
+  .logo-text:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .logo-bubble, .bubble-2 {
+    background-color: rgba(255, 255, 255, 0.9);
+  }
+  
+  .logo-container {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Dark mode adjustments - thêm độ sáng cho gradient trong dark mode */
+[data-theme="dark"] .logo-text,
+[data-theme="dracula"] .logo-text,
+[data-theme="night"] .logo-text,
+[data-theme="synthwave"] .logo-text,
+[data-theme="halloween"] .logo-text,
+[data-theme="forest"] .logo-text {
+  background: linear-gradient(to right, 
+    #60a5fa, /* lighter blue */
+    #c4b5fd, /* lighter purple */
+    #f472b6  /* lighter pink */
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  text-shadow: none;
+}
+
+/* Theme sáng - làm gradient sẫm màu hơn để dễ nhìn */
+[data-theme="light"] .logo-text,
+[data-theme="cupcake"] .logo-text,
+[data-theme="bumblebee"] .logo-text,
+[data-theme="emerald"] .logo-text,
+[data-theme="corporate"] .logo-text {
+  background: linear-gradient(to right, 
+    #1c64f2, /* darker blue */
+    #8b5cf6, /* darker purple */
+    #db2777  /* darker pink */
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  text-shadow: none;
+}
