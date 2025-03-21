@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { db } from '@/db';
 import { messageSeen, messages } from '@/db/schema';
 import { cookies } from 'next/headers';
@@ -7,7 +7,7 @@ import { pusherServer, CHANNELS, EVENTS } from '@/lib/pusher';
 
 // Mark a message as seen
 export async function POST(
-  req: Request,
+  request: NextRequest,
   { params }: { params: { id: string; messageId: string } }
 ) {
   try {
