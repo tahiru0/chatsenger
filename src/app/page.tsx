@@ -1,15 +1,32 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { pusherClient, EVENTS } from "@/lib/pusher";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { pusherClient, EVENTS, CHANNELS } from "@/lib/pusher";
 import ConversationList from "@/components/conversation/ConversationList";
 import ChatView from "@/components/conversation/ChatView";
 import AuthForm from "@/components/auth/AuthForm";
+import { useToast } from "@/providers/ToastProvider";
+
+// Define type for conversations
+type Conversation = {
+  id: number;
+  name: string | null;
+  lastMessage?: {
+    content: string;
+    createdAt: string;
+  };
+  participants: {
+    id: number;
+    name: string;
+  }[];
+};
 
 export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
+  const { addToast } = useToast();
+  const queryClient = useQueryClient();
 
   // Check if user is logged in
   useEffect(() => {
@@ -39,17 +56,51 @@ export default function Home() {
   useEffect(() => {
     if (!userId) return;
 
-    const channel = pusherClient.subscribe(`user-${userId}`);
+    // Subscribe to user-specific events for notifications
+    const userChannel = pusherClient.subscribe(`user-${userId}`);
     
-    channel.bind(EVENTS.NEW_MESSAGE, (messageData: { conversationId: number }) => {
+    userChannel.bind(EVENTS.NEW_MESSAGE, (messageData: { conversationId: number; message: string }) => {
       // Handle new message notification
-      console.log("New message received in conversation:", messageData.conversationId);
+      addToast(`New message in conversation`, 'info');
+      
+      // Invalidate the conversation query to refresh data
+      queryClient.invalidateQueries({ queryKey: ['conversation', messageData.conversationId] });
+    });
+    
+    // Friend request notification
+    userChannel.bind(EVENTS.NEW_FRIEND_REQUEST, (data: { senderId: number; senderName: string }) => {
+      addToast(`New friend request from ${data.senderName}`, 'info');
+    });
+    
+    // Friend request accepted notification
+    userChannel.bind(EVENTS.FRIEND_REQUEST_ACCEPTED, (data: { friendName: string }) => {
+      addToast(`${data.friendName} accepted your friend request`, 'success');
+    });
+
+    // When conversation name changes, update the conversation list
+    const handleConversationUpdate = (data: { conversationId: number }) => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['conversation', data.conversationId] });
+    };
+    
+    // Listen for conversation updates
+    const conversations = conversationsData?.conversations as Conversation[] || [];
+    conversations.forEach((conversation) => {
+      const conversationChannel = pusherClient.subscribe(`${CHANNELS.CONVERSATION}-${conversation.id}`);
+      conversationChannel.bind(EVENTS.CONVERSATION_UPDATED, handleConversationUpdate);
     });
     
     return () => {
+      userChannel.unbind_all();
       pusherClient.unsubscribe(`user-${userId}`);
+      
+      // Unsubscribe from conversation channels
+      const conversations = conversationsData?.conversations as Conversation[] || [];
+      conversations.forEach((conversation) => {
+        pusherClient.unsubscribe(`${CHANNELS.CONVERSATION}-${conversation.id}`);
+      });
     };
-  }, [userId]);
+  }, [userId, addToast, conversationsData?.conversations, queryClient]);
 
   if (!userId) {
     return <AuthForm onLogin={setUserId} />;

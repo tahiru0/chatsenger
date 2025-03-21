@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { friends } from '@/db/schema';
+import { friends, users } from '@/db/schema';
 import { z } from 'zod';
 import { cookies } from 'next/headers';
-import { pusherServer, CHANNELS, EVENTS } from '@/lib/pusher';
+import { pusherServer, EVENTS } from '@/lib/pusher';
+import { and, eq } from 'drizzle-orm';
 
 // Get all friends
 export async function GET() {
@@ -13,30 +14,47 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const userFriends = await db.query.friends.findMany({
-      where: (friends, { eq, and, or }) => and(
-        or(
-          eq(friends.userId, parseInt(userId)),
-          eq(friends.friendId, parseInt(userId))
-        ),
+    // Instead of using relations, use manual joins and two separate queries
+    
+    // Find friends where current user is the requester
+    const sentFriendships = await db
+      .select({
+        friendDetails: {
+          id: users.id,
+          name: users.name,
+          phone: users.phone,
+        }
+      })
+      .from(friends)
+      .innerJoin(users, eq(friends.friendId, users.id))
+      .where(and(
+        eq(friends.userId, parseInt(userId)),
         eq(friends.status, 'accepted')
-      ),
-      with: {
-        user: true,
-        friend: true,
-      },
-    });
+      ));
     
-    const formattedFriends = userFriends.map(relationship => {
-      // If current user is the "userId", return the friend details
-      if (relationship.userId === parseInt(userId)) {
-        return relationship.friend;
-      }
-      // If current user is the "friendId", return the user details
-      return relationship.user;
-    });
+    // Find friends where current user is the recipient
+    const receivedFriendships = await db
+      .select({
+        friendDetails: {
+          id: users.id,
+          name: users.name,
+          phone: users.phone,
+        }
+      })
+      .from(friends)
+      .innerJoin(users, eq(friends.userId, users.id))
+      .where(and(
+        eq(friends.friendId, parseInt(userId)),
+        eq(friends.status, 'accepted')
+      ));
     
-    return NextResponse.json({ friends: formattedFriends });
+    // Combine the results
+    const allFriends = [
+      ...sentFriendships.map(f => f.friendDetails),
+      ...receivedFriendships.map(f => f.friendDetails)
+    ];
+    
+    return NextResponse.json({ friends: allFriends });
   } catch (error: unknown) {
     console.error('Failed to fetch friends:', error);
     return NextResponse.json({ error: 'Failed to fetch friends' }, { status: 500 });
@@ -53,6 +71,14 @@ export async function POST(req: Request) {
     
     const body = await req.json();
     const { phone } = z.object({ phone: z.string() }).parse(body);
+    
+    // Get sender's name for notification
+    const sender = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.id, parseInt(userId)),
+      columns: {
+        name: true,
+      }
+    });
     
     // Find user by phone
     const friend = await db.query.users.findFirst({
@@ -94,12 +120,13 @@ export async function POST(req: Request) {
       status: 'pending',
     });
     
-    // Trigger Pusher event
+    // Notify the recipient via Pusher
     await pusherServer.trigger(
-      `${CHANNELS.FRIENDS}-${friend.id}`,
+      `user-${friend.id}`,
       EVENTS.NEW_FRIEND_REQUEST,
       {
         senderId: parseInt(userId),
+        senderName: sender?.name || 'Someone',
       }
     );
     

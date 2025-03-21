@@ -1,0 +1,78 @@
+/* Custom styles for React-Toastify to match DaisyUI themes */
+.Toastify__toast-container {
+  z-index: 9999;
+}
+
+.Toastify__toast {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  margin-bottom: 0.75rem;
+}
+
+/* Success toast */
+.toast-success {
+  background-color: hsl(var(--su)) !important;
+  color: hsl(var(--suc)) !important;
+}
+
+/* Error toast */
+.toast-error {
+  background-color: hsl(var(--er)) !important;
+  color: hsl(var(--erc)) !important;
+}
+
+/* Info toast */
+.toast-info {
+  background-color: hsl(var(--in)) !important;
+  color: hsl(var(--inc)) !important;
+}
+
+/* Warning toast */
+.toast-warning {
+  background-color: hsl(var(--wa)) !important;
+  color: hsl(var(--wac)) !important;
+}
+
+/* Dark theme adjustments */
+.toast-dark .Toastify__close-button {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.toast-dark .Toastify__close-button:hover {
+  color: white;
+}
+
+/* Light theme adjustments */
+.toast-light .Toastify__close-button {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.toast-light .Toastify__close-button:hover {
+  color: black;
+}
+
+/* Progress bar customization */
+.Toastify__progress-bar {
+  height: 3px;
+}
+
+.toast-success .Toastify__progress-bar {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.toast-error .Toastify__progress-bar {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.toast-info .Toastify__progress-bar {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.toast-warning .Toastify__progress-bar {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Remove default shadow */
+.Toastify__toast-body {
+  padding: 0.25rem 0;
+}

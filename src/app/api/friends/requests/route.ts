@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { friends, users } from '@/db/schema';
 import { cookies } from 'next/headers';
 import { and, eq } from 'drizzle-orm';
+import { pusherServer, EVENTS } from '@/lib/pusher';
 
 // Get friend requests for the current user
 export async function GET() {
@@ -87,14 +88,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid request parameters' }, { status: 400 });
     }
     
-    // Find the friend request
-    const friendRequest = await db.query.friends.findFirst({
-      where: (friends, { and, eq }) => and(
-        eq(friends.id, requestId),
-        eq(friends.friendId, parseInt(userId)),
-        eq(friends.status, 'pending')
+    // Find the friend request without using relations to avoid the error
+    const friendRequest = await db
+      .select({
+        id: friends.id,
+        userId: friends.userId,
+        friendId: friends.friendId,
+        status: friends.status
+      })
+      .from(friends)
+      .where(
+        and(
+          eq(friends.id, requestId),
+          eq(friends.friendId, parseInt(userId)),
+          eq(friends.status, 'pending')
+        )
       )
-    });
+      .limit(1)
+      .then(rows => rows[0]);
     
     if (!friendRequest) {
       return NextResponse.json({ error: 'Friend request not found' }, { status: 404 });
@@ -108,6 +119,30 @@ export async function POST(req: Request) {
         updatedAt: new Date()
       })
       .where(eq(friends.id, requestId));
+    
+    // If accepted, notify the sender via Pusher
+    if (action === 'accept') {
+      // Get current user's name
+      const currentUser = await db
+        .select({
+          id: users.id,
+          name: users.name
+        })
+        .from(users)
+        .where(eq(users.id, parseInt(userId)))
+        .limit(1)
+        .then(rows => rows[0]);
+
+      
+      await pusherServer.trigger(
+        `user-${friendRequest.userId}`,
+        EVENTS.FRIEND_REQUEST_ACCEPTED,
+        {
+          friendId: parseInt(userId),
+          friendName: currentUser?.name,
+        }
+      );
+    }
     
     return NextResponse.json({ success: true });
   } catch (error) {

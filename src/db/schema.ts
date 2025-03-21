@@ -48,6 +48,7 @@ export const messages = pgTable('messages', {
   conversationId: integer('conversation_id').notNull().references(() => conversations.id, { onDelete: 'cascade' }),
   senderId: integer('sender_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   content: text('content').notNull(),
+  gifUrl: text('gif_url'),  // New column for GIF URLs
   status: messageStatusEnum('status').notNull().default('sent'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
