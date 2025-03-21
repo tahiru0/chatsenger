@@ -1,9 +1,22 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { conversations, conversationParticipants, messages } from '@/db/schema';
+import { conversations, conversationParticipants } from '@/db/schema';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
-import { desc, eq } from 'drizzle-orm';
+
+type ConversationParticipant = {
+  user: {
+    id: number;
+    name: string;
+    phone: string;
+  };
+};
+
+interface FullConversation {
+  id: number;
+  name: string | null;
+  participants: ConversationParticipant[];
+}
 
 // Get all conversations for current user
 export async function GET() {
@@ -30,7 +43,7 @@ export async function GET() {
     }
     
     // Get full conversation details with participants
-    const userConversations = await db.query.conversations.findMany({
+    const userConversations = (await db.query.conversations.findMany({
       where: (conversations, { inArray }) => inArray(conversations.id, conversationIds),
       with: {
         participants: {
@@ -45,7 +58,7 @@ export async function GET() {
           }
         }
       }
-    });
+    })) as FullConversation[];
     
     // For each conversation, get the last message
     const conversationsWithLastMessage = await Promise.all(
@@ -62,8 +75,8 @@ export async function GET() {
         
         // Format participants for the client
         const formattedParticipants = conversation.participants
-          .filter(p => p.user.id !== parseInt(userId!)) // Remove current user
-          .map(p => ({
+          .filter((p: ConversationParticipant) => p.user.id !== parseInt(userId!)) // Remove current user
+          .map((p: ConversationParticipant) => ({
             id: p.user.id,
             name: p.user.name,
           }));
