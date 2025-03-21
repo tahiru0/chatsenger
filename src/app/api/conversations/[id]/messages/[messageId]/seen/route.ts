@@ -1,23 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { messageSeen, messages } from '@/db/schema';
 import { cookies } from 'next/headers';
 import { and, eq } from 'drizzle-orm';
 import { pusherServer, CHANNELS, EVENTS } from '@/lib/pusher';
 
-interface RouteContext {
-  params: {
-    id: string;
-    messageId: string;
-  };
-}
-
-// Mark a message as seen
-export async function POST(request: Request, context: RouteContext) {
+// Simplified route handler without type annotations that cause build errors
+export async function POST(
+  req: NextRequest,
+  context: { params: { id: string; messageId: string } }
+) {
   try {
-    const { params } = context;
-    const conversationId = params.id;
-    const messageId = params.messageId;
+    const { id: conversationId, messageId } = context.params;
 
     const cookiesStore = await cookies();
     const userId = cookiesStore.get('userId')?.value;
